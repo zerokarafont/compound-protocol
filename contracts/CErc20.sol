@@ -169,7 +169,7 @@ contract CErc20 is CToken, CErc20Interface {
         assembly {
             switch returndatasize()
                 case 0 {                       // This is a non-standard ERC-20
-                    success := not(0)          // set success to true
+                    success := not(0)          // set success to true 按位取反 0 -> 1
                 }
                 case 32 {                      // This is a compliant ERC-20
                     returndatacopy(0, 0, 32)

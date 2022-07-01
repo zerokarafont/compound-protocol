@@ -9,6 +9,9 @@ import "./InterestRateModel.sol";
   * @title Compound's JumpRateModel Contract V2 for V2 cTokens
   * @author Arr00
   * @notice Supports only for V2 cTokens
+  * note 使用了此利率模型的cToken
+    cAAVE cCOMP cFEI cLINK cMKR cSUSHI cTUSD cUNI cUSDC cUSDP cUSDT 
+    cWBTC2 cYFI 
   */
 contract JumpRateModelV2 is InterestRateModel, BaseJumpRateModelV2  {
 

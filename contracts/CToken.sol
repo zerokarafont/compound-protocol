@@ -17,6 +17,7 @@ abstract contract CToken is CTokenInterface, ExponentialNoError, TokenErrorRepor
     /**
      * @notice Initialize the money market
      * @param comptroller_ The address of the Comptroller
+        审计合约
      * @param interestRateModel_ The address of the interest rate model
      * @param initialExchangeRateMantissa_ The initial exchange rate, scaled by 1e18
      * @param name_ EIP-20 name of this token
@@ -30,9 +31,10 @@ abstract contract CToken is CTokenInterface, ExponentialNoError, TokenErrorRepor
                         string memory symbol_,
                         uint8 decimals_) public {
         require(msg.sender == admin, "only admin may initialize the market");
+        // 判断上次累加利息的区块号为0(默认初始值) 和 市场开放以来总累加的利息为 0 说明未初始化
         require(accrualBlockNumber == 0 && borrowIndex == 0, "market may only be initialized once");
 
-        // Set initial exchange rate
+        // Set initial exchange rate 初始汇率
         initialExchangeRateMantissa = initialExchangeRateMantissa_;
         require(initialExchangeRateMantissa > 0, "initial exchange rate must be greater than zero.");
 
@@ -42,7 +44,7 @@ abstract contract CToken is CTokenInterface, ExponentialNoError, TokenErrorRepor
 
         // Initialize block number and borrow index (block number mocks depend on comptroller being set)
         accrualBlockNumber = getBlockNumber();
-        borrowIndex = mantissaOne;
+        borrowIndex = mantissaOne; // 1e18
 
         // Set the interest rate model (depends on block number / borrow index)
         err = _setInterestRateModelFresh(interestRateModel_);
@@ -331,13 +333,18 @@ abstract contract CToken is CTokenInterface, ExponentialNoError, TokenErrorRepor
 
         /* Short-circuit accumulating 0 interest */
         if (accrualBlockNumberPrior == currentBlockNumber) {
+            // 如果区块号没有变 直接返回0
             return NO_ERROR;
         }
 
         /* Read the previous values out of storage */
+        // (资金池余额)获取底层underlying资产在cToken合约的余额balance
         uint cashPrior = getCashPrior();
+        // 总借款
         uint borrowsPrior = totalBorrows;
+        // 总储备金
         uint reservesPrior = totalReserves;
+        // 借款指数
         uint borrowIndexPrior = borrowIndex;
 
         /* Calculate the current borrow interest rate */
@@ -356,8 +363,11 @@ abstract contract CToken is CTokenInterface, ExponentialNoError, TokenErrorRepor
          *  borrowIndexNew = simpleInterestFactor * borrowIndex + borrowIndex
          */
 
+        // 经过的区块的应计利率
         Exp memory simpleInterestFactor = mul_(Exp({mantissa: borrowRateMantissa}), blockDelta);
+        // 产生的利息
         uint interestAccumulated = mul_ScalarTruncate(simpleInterestFactor, borrowsPrior);
+        // 新的借贷数
         uint totalBorrowsNew = interestAccumulated + borrowsPrior;
         uint totalReservesNew = mul_ScalarTruncateAddUInt(Exp({mantissa: reserveFactorMantissa}), interestAccumulated, reservesPrior);
         uint borrowIndexNew = mul_ScalarTruncateAddUInt(simpleInterestFactor, borrowIndexPrior, borrowIndexPrior);
@@ -399,10 +409,12 @@ abstract contract CToken is CTokenInterface, ExponentialNoError, TokenErrorRepor
         /* Fail if mint not allowed */
         uint allowed = comptroller.mintAllowed(address(this), minter, mintAmount);
         if (allowed != 0) {
+            // 如果返回码不为0，说明出现错误
             revert MintComptrollerRejection(allowed);
         }
 
         /* Verify market's block number equals current block number */
+        // 确保计算利息并且最新的区块号已经更新
         if (accrualBlockNumber != getBlockNumber()) {
             revert MintFreshnessCheck();
         }
@@ -656,6 +668,7 @@ abstract contract CToken is CTokenInterface, ExponentialNoError, TokenErrorRepor
         uint accountBorrowsPrev = borrowBalanceStoredInternal(borrower);
 
         /* If repayAmount == -1, repayAmount = accountBorrows */
+        // FIXME: uint(-1) == type(uint).max, 但是这里有溢出检查，不可能传-1啊
         uint repayAmountFinal = repayAmount == type(uint).max ? accountBorrowsPrev : repayAmount;
 
         /////////////////////////

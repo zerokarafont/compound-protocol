@@ -63,11 +63,13 @@ contract CTokenStorage {
 
     /**
      * @notice Block number that interest was last accrued at
+        上次累加利息的区块编号
      */
     uint public accrualBlockNumber;
 
     /**
      * @notice Accumulator of the total earned interest rate since the opening of the market
+       市场开放以来总赚取利率的累加
      */
     uint public borrowIndex;
 

@@ -7,6 +7,7 @@ import "./InterestRateModel.sol";
   * @title Logic for Compound's JumpRateModel Contract V2.
   * @author Compound (modified by Dharma Labs, refactored by Arr00)
   * @notice Version 2 modifies Version 1 by enabling updateable parameters.
+    https://learnblockchain.cn/article/2618
   */
 abstract contract BaseJumpRateModelV2 is InterestRateModel {
     event NewInterestParams(uint baseRatePerBlock, uint multiplierPerBlock, uint jumpMultiplierPerBlock, uint kink);

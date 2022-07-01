@@ -11,8 +11,11 @@ abstract contract InterestRateModel {
 
     /**
       * @notice Calculates the current borrow interest rate per block
+        获取每个区块的借贷利率
       * @param cash The total amount of cash the market has
+        市场拥有的现金总量
       * @param borrows The total amount of borrows the market has outstanding
+        市场尚未偿还的借款总额
       * @param reserves The total amount of reserves the market has
       * @return The borrow rate per block (as a percentage, and scaled by 1e18)
       */
